@@ -154,7 +154,7 @@ if status == 2:
 	
 	temp = sensors.getP_Tv()
     p = temp[0]*256+temp[1]
-	h = 18400*(1,0733)*(log10(p0/p))
+	h = 18400*(1.0733)*(log10(p0/p))
 	
 	time_ff = Time_of_FF(h)
 	text = "Apogee: " + h + " m. The maximum estimated time of free fall: " + time_ff + " seconds. "
