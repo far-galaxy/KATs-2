@@ -135,5 +135,5 @@ class PiCam():
 		self.camera.stop_recording()
 
 class USBcam():
-	def make_photo(self, filename):
-		self.call("fswebcam", "-r", "640x480", "--no-banner", filename+".jpg")
+	def make_photo(self, filename, resolution):
+		self.call("fswebcam", "-r", resolution, "--no-banner", filename+".jpg")

@@ -103,7 +103,12 @@ def getDate():
 
     time=[day, hour, mns, sec]
     return time
-
+	
+def getSec():
+    sec=format(pcf8583.read_data(0x02)[0],'08b')
+    sec=format(int(sec[:4],2)*10+int(sec[4:],2),'02')
+    return sec
+	
 def getDist():
     laser.write_data(0x00, 0x01)
     data = laser.read_data(0x14, 12)
