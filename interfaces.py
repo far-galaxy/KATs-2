@@ -111,7 +111,7 @@ class NRF24L01():
         time.sleep(0.1)
         self.radio.setPALevel(nrf24.NRF24.PA_HIGH)
         time.sleep(0.1)
-        self.radio.opnWritingPipe(pipes[0])
+        self.radio.openWritingPipe(pipes[0])
         time.sleep(0.1)
         self.radio.setAutoAck(False)
         time.sleep(0.1)
