@@ -119,6 +119,7 @@ def getDate():
         return [0,0,0,0]    
 	
 def getSec():
+    sleep(0.05)
     sec=format(pcf8583.read_data(0x02)[0],'08b')
     sec=int(sec[:4],2)*10+int(sec[4:],2)
     return sec
