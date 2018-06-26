@@ -10,9 +10,10 @@ tmfile = open('telemetry.csv','w')
 
 vysotomer = interfaces.Pin(30,False)
 ardupter = sensors.Ardupter(1)
-offswicth = interfaces.Pin(5,False)
+#global offswitch
+offswitch = interfaces.Pin(5,False)
 parashute = interfaces.Pin(10,True)
-parashute.set_pin(False)
+parashute.setpin(False)
 
 sim808 = sensors.SIM808()
 phone = "+78005553535"
@@ -42,19 +43,20 @@ def Read_TM():
     Tn = sensors.getTn()
     H = sensors.getH()
     accel = ardupter.get_raw_accel()
-	if num_p%20==0:
-		coord = sim808.get_position()
-		sim808.send_sms(phone,coord)
-		return [date,p,Tv,Tn,H,accel,coord]
+    #if num_p%20==0:
+        #coord = sim808.get_position()
+       # sim808.send_sms(phone,coord)
+        #return [date,p,Tv,Tn,H,accel,coord]
     return date+[p1,p2,Tv,Tn,H]+accel+[0,0,0,0,0,0,0,0]
 
 def Send_TM():
     TM1 = Read_TM()
     TM2 = [0]*16
     TM = [128, num_p]+TM1+TM2 #checksum: 128 - first part, 255 - second, 1 - photo
-	tmfile.write(' '.join(TM))
-    print(TM, nrf0.send(TM))
-    #print(TM)
+    #tmfile.write(str(' '.join(TM)))
+    print(TM)
+    #print(TM, nrf0.send(TM))
+    print(TM)
     return TM
 
 def Check_SD():
@@ -93,21 +95,22 @@ def Block_0():
     Send_TM()
     x,y,z = ardupter.get_accel()
     vector = (x**2+y**2+z**2)**0.5
-    num_p+=1
     Check_SD()
 	
 if status == 0:
     text = "Status: waiting to the start"
     print(text)
-	tmfile.write(text)
-    cam = Process(target=picam.start_record, args=('/home/pi/Dektop/1'))
+    tmfile.write(text)
+    cam = Process(target=picam.start_record, args=('/home/pi/Dektop/1',))
     cam.start()
     while vector < 2000:
         B0 = Process(target = Block_0)
         B0.start()
-        lsec = sensors.getSec()
-        while lsec == sensors.getSec():
+        lsec = sec =  sensors.getSec()
+        while lsec == sec:
+            sec = sensors.getSec()
         B0.join()
+        num_p+=1
         
     picam.start_record('/home/pi/Desktop/video')
     status=1
@@ -119,19 +122,20 @@ if status == 0:
 def Block_1():
     Send_TM()
     distlas = sensors.getDist()
-    num_p+=1
     Check_SD()
 
 if status == 1:
     text = "Status: flight"
     print(text)
-	tmfile.write(text)
+    tmfile.write(text)
     while distlas < undock_dist:
         B1 = Process(target = Block_1)
         B1.start()
-        lsec = sensors.getSec()
-        while lsec == sensors.getSec():
+        lsec = sec =  sensors.getSec()
+        while lsec == sec:
+            sec = sensors.getSec()
         B1.join()
+        num_p+=1
     status = 2
 
 #-----------------END Block 1-----------------------------------
@@ -141,7 +145,6 @@ def Block_2():
     photo = Process(target=usbcam.make_photo, args=(num_photo,"640x480",))
     photo.start()
     Send_TM()
-    num_p+=1
     is300m = vysotomer.readpin()
     Check_SD()
     photo.join()
@@ -149,24 +152,26 @@ def Block_2():
 if status == 2:
     text = "Status: undocking"
     print (text)
-	tmfile.write(text)
+    tmfile.write(text)
 
 	
-	temp = sensors.getP_Tv()
+    temp = sensors.getP_Tv()
     p = temp[0]*256+temp[1]
-	h = 18400*(1.0733)*(log10(p0/p))
+    h = 18400*(1.0733)*(log10(p0/p))
 	
-	time_ff = Time_of_FF(h)
-	text = "Apogee: " + h + " m. The maximum estimated time of free fall: " + time_ff + " seconds. "
-	print (text)
-	tmfile.write(text)
+    time_ff = Time_of_FF(h)
+    text = "Apogee: " + h + " m. The maximum estimated time of free fall: " + time_ff + " seconds. "
+    print (text)
+    tmfile.write(text)
     tick = 0
     while is300m == False and tick < time_ff:
-	    B2 = Process(target = Block_2)
+        B2 = Process(target = Block_2)
         B2.start()
-        lsec = sensors.getSec()
-        while lsec == sensors.getSec():
+        lsec = sec =  sensors.getSec()
+        while lsec == sec:
+            sec = sensors.getDate()[3]
         B2.join()
+        num_p+=1
     
     status = 3
 
@@ -177,7 +182,6 @@ def Block_3():
     photo = Process(target=usbcam.make_photo, args=(num_photo,"640x480",))
     photo.start()
     Send_TM()
-    num_p+=1
     Check_SD()
     photo.join()
 
@@ -185,13 +189,15 @@ if status == 3:
     text = "Status: decrease"
     print (text)
     tmfile.write(text)
-    parashute.set_pin(True)
+    parashute.setpin(True)
     while distlas > 100:
-	    B3 = Process(target = Block_3)
+        B3 = Process(target = Block_3)
         B3.start()
-        lsec = sensors.getSec()
-        while lsec == sensors.getSec():
+        lsec = sec =  sensors.getSec()
+        while lsec == sec:
+            sec = sensors.getSec()
         B3.join()
+        num_p+=1
     status = 4
 #-----------------END Block 3-----------------------------------
 

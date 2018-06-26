@@ -56,23 +56,24 @@ class UART():
         self.call (["sudo","systemctl","stop","serial-getty@ttyS0.service"])
         self.port = serial.Serial("/dev/ttyAMA0", baudrate=115200, timeout=None)
     def getAT(self,ask,ans):
-        self.port.write(ask)
+        self.port.write(ask.encode())
         rcv=''
+        tp=timestart()
         while True:
-            if rcv.find(ans)==-1:
+            if rcv.find(ans)==-1 and timestart()<=tp+2:
                 if self.port.inWaiting()!=0:
-                    rcv += self.port.read()
+                    rcv += str(self.port.read())
             else:
                 return rcv
                 break
 
     def waitAT(self,ask,tme):
-        self.port.write(ask)
+        self.port.write(ask.encode())
         rcv=''
         tp=timestart()
         while timestart()<=tp+tme:
             if self.port.inWaiting()!=0:
-                rcv += self.port.read()
+                rcv += str(self.port.read())
 
         return rcv
 
@@ -110,7 +111,7 @@ class NRF24L01():
         time.sleep(0.1)
         self.radio.setPALevel(nrf24.NRF24.PA_HIGH)
         time.sleep(0.1)
-        self.radio.openWritingPipe(pipes[0])
+        self.radio.opnWritingPipe(pipes[0])
         time.sleep(0.1)
         self.radio.setAutoAck(False)
         time.sleep(0.1)
@@ -125,15 +126,27 @@ class NRF24L01():
         return self.radio.last_error
 
 class PiCam():
-	def __init__(self,resolution):
-		self.camera = picamera.PiCamera()
-		self.camera.resolution = resolution
-                sellf.camera.framerate = 30
-	def start_record(self,filename):
-		self.camera.start_recording(filename+'.h264')
-	def stop_record(self):
-		self.camera.stop_recording()
+    def __init__(self,resolution):
+        try:
+            self.camera = picamera.PiCamera()
+            self.camera.resolution = resolution
+            self.camera.framerate = 30
+        except:
+            pass
+    def start_record(self,filename):
+        try:
+            self.camera.start_recording(filename+'.h264')
+        except:
+            pass
+    def stop_record(self):
+        try:
+            self.camera.stop_recording()
+        except:
+            pass
 
 class USBcam():
-	def make_photo(self, filename, resolution):
-		self.call("fswebcam", "-r", resolution, "--no-banner", filename+".jpg")
+    def make_photo(self, filename, resolution):
+        try:
+            self.call("fswebcam", "-r", resolution, "--no-banner", filename+".jpg")
+        except:
+            pass
